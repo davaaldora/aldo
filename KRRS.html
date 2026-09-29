@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Kartu Rencana Studi (KRS)</title>
+  
+  <!-- Font & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- CSS External -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Background Decor -->
+  <div class="bg-decor bg-blob-1"></div>
+  <div class="bg-decor bg-blob-2"></div>
+
+  <div class="container">
+    
+    <!-- HEADER PROFIL MAHASISWA -->
+    <header class="profile-card no-print">
+      <div class="profile-main">
+        <div class="avatar-wrapper">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250" alt="Foto Profil" class="profile-img">
+          <span class="status-indicator"></span>
+        </div>
+        <div class="profile-details">
+          <div class="profile-tags">
+            <span class="badge badge-primary"><i class="fa-solid fa-graduation-cap"></i> S1 Teknik Informatika</span>
+            <span class="badge badge-slate"><i class="fa-solid fa-calendar-alt"></i> Semester 3 - 2026/2027</span>
+          </div>
+          <h1 class="student-name">DAVA ALDORA ARIE HERLAMBANG</h1>
+            <p class="student-meta">NIM: <strong>535250136</strong> | Dosen PA: <strong> Dr. Ir. Ahmad, M.T.</strong></p>
+        </div>
+      </div>
+      <div class="profile-stats">
+        <div class="stat-box">
+          <span class="stat-label">IPK Lalu</span>
+          <span class="stat-value text-indigo">3.85</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Max SKS</span>
+          <span class="stat-value text-slate">24 SKS</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- NAVIGASI TAB -->
+    <nav class="tab-navigation no-print">
+      <button class="tab-btn active" onclick="switchTab('pengisian')">
+        <div class="tab-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+        <div class="tab-text">
+          <span class="tab-title">1. Pengisian KRS</span>
+          <span class="tab-desc">Pilih mata kuliah</span>
+        </div>
+      </button>
+      <button class="tab-btn" onclick="switchTab('ringkasan')">
+        <div class="tab-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+        <div class="tab-text">
+          <span class="tab-title">2. Ringkasan & Pengajuan</span>
+          <span class="tab-desc">Verifikasi & kirim</span>
+        </div>
+      </button>
+      <button class="tab-btn" id="btn-tab-cetak" onclick="switchTab('cetak')" disabled>
+        <div class="tab-icon"><i class="fa-solid fa-print"></i></div>
+        <div class="tab-text">
+          <span class="tab-title">3. Cetak KRS</span>
+          <span class="tab-desc">Unduh / Cetak PDF</span>
+        </div>
+      </button>
+    </nav>
+
+    <!-- TAB 1: PENGISIAN KRS -->
+    <section id="tab-pengisian" class="tab-content active no-print">
+      <!-- Widget SKS Progress -->
+      <div class="sks-widget">
+        <div class="sks-info">
+          <div>
+            <h3>Total SKS Dipilih</h3>
+            <p>Maksimal pengambilan semester ini adalah 24 SKS</p>
+          </div>
+          <div class="sks-counter">
+            <span id="current-sks">0</span>
+            <span class="sks-max">/ 24 SKS</span>
+          </div>
+        </div>
+        <div class="progress-bar-bg">
+          <div id="sks-progress-bar" class="progress-bar-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <!-- Controls (Filter & Search) -->
+      <div class="controls-bar">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="search-input" placeholder="Cari Mata Kuliah / Dosen / Kode..." onkeyup="filterCourses()">
+        </div>
+        <div class="filter-actions">
+          <select id="semester-filter" onchange="filterCourses()" class="custom-select">
+            <option value="all">Semua Semester</option>
+            <option value="3">Semester 3</option>
+            <option value="5" selected>Semester 3 (Rekomendasi)</option>
+          </select>
+          <button class="btn btn-outline" onclick="selectRecommendedPackage()">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Pilih Paket Sem 3
+          </button>
+        </div>
+      </div>
+
+      <!-- Alert Clash Container -->
+      <div id="clash-alert" class="alert alert-warning hidden">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span><strong>Peringatan Jadwal Bentrok:</strong> Ada mata kuliah pilihan Anda yang berada di waktu bersamaan!</span>
+      </div>
+
+      <!-- Tabel Mata Kuliah -->
+      <div class="table-responsive">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th width="60" class="text-center">Pilih</th>
+              <th width="100">Kode</th>
+              <th>Mata Kuliah</th>
+              <th width="60" class="text-center">SKS</th>
+              <th width="70" class="text-center">Sem</th>
+              <th>Jadwal & Ruang</th>
+              <th>Dosen Pengampu</th>
+            </tr>
+          </thead>
+          <tbody id="matkul-list">
+            <!-- Render via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 2: RINGKASAN & PENGAJUAN KRS -->
+    <section id="tab-ringkasan" class="tab-content no-print">
+      <div class="summary-header">
+        <div>
+          <h2>Ringkasan Kartu Rencana Studi</h2>
+          <p>Periksa kembali mata kuliah yang Anda pilih sebelum mengajukannya ke Dosen Pembimbing Akademik.</p>
+        </div>
+        <div class="status-box">
+          <span class="status-label font-bold">Status Pengajuan:</span>
+          <span id="status-badge" class="badge badge-amber"><i class="fa-solid fa-clock"></i> Belum Diajukan (Draft)</span>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="custom-table">
+          <thead>
+            <!-- Info Mahasiswa Cetak -->
+      <div class="print-student-info">
+        <table class="info-grid">
+          <tr>
+            <td><strong>NIM</strong></td>
+            <!-- UBAH NIM DI SINI -->
+            <td>: 535250136</td>
+            <td><strong>Fakultas</strong></td>
+            <td>: Teknologi Informasi</td>
+          </tr>
+          <tr>
+            <td><strong>Nama Mahasiswa</strong></td>
+            <!-- UBAH NAMA DI SINI -->
+            <td>: DAVA ALDORA ARIE HERLAMBANG</td>
+            <td><strong>Program Studi</strong></td>
+            <td>: S1 Teknik Informatika</td>
+          </tr>
+          <tr>
+            <td><strong>Dosen PA</strong></td>
+            <td>: Dr. Ir. Ahmad, M.T.</td>
+            <td><strong>Tahun Akademik</strong></td>
+            <td>: 2026/2027 (Ganjil)</td>
+          </tr>
+        </table>
+      </div>
+            <tr>
+              <th width="50" class="text-center">No</th>
+              <th width="100">Kode</th>
+              <th>Mata Kuliah</th>
+              <th width="60" class="text-center">SKS</th>
+              <th>Jadwal & Ruang</th>
+              <th>Dosen Pengampu</th>
+            </tr>
+          </thead>
+          <tbody id="ringkasan-list">
+            <!-- Render via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="summary-footer">
+        <div class="note-box">
+          <label for="student-notes"><i class="fa-solid fa-comment-dots"></i> Catatan untuk Dosen PA (Opsional):</label>
+          <textarea id="student-notes" placeholder="Tuliskan pesan jika ada penyesuaian jadwal atau konsultasi khusus..."></textarea>
+        </div>
+        <div class="summary-action-card">
+          <div class="total-sks-display">
+            <span>Total Beban SKS Fix:</span>
+            <strong id="total-sks-ringkasan">0 SKS</strong>
+            <p class="sig-name"><strong>    DAVA ALDORA ARIE HERLAMBANG</strong></p>
+            <p class="sig-id">NIM. 535250136</p> <!-- Ganti NIM di sini -->
+          </div>
+          <button class="btn btn-emerald btn-lg w-full" id="btn-pengajuan" onclick="openConfirmModal()">
+            <i class="fa-solid fa-paper-plane"></i> Ajukan KRS Sekarang
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: CETAK KRS (TAMPIL DI SCREEN & PRINT) -->
+    <section id="tab-cetak" class="tab-content">
+      
+      <!-- Kop Surat Resmi Kampus (Hanya Tampil Saat Cetak / Preview Tab 3) -->
+      <div class="official-header">
+        <div class="kop-logo">
+          <i class="fa-solid fa-university"></i>
+        </div>
+        <div class="kop-text">
+          <h2>UNIVERSITAS TARUMANAGARA</h2>
+          <h3>FAKULTAS TEKNOLOGI INFORMASI</h3>
+          <p>Jl. Letjen S. Parman No.1, RT.6/RW.16, Tomang, Kec. Grogol petamburan, Kota Jakarta Barat, D.K.I. Jakarta 11440.| Web: https://untar.ac.id/ | Telp: 021 - 56958723</p>
+        </div>
+      </div>
+
+      <div class="document-title">
+        <h2>KARTU RENCANA STUDI (KRS)</h2>
+        <p>SEMESTER GANJIL TA 2026/2027</p>
+      </div>
+
+      <!-- Info Mahasiswa Cetak -->
+      <div class="print-student-info">
+        <table class="info-grid">
+          <tr>
+            <td><strong>NIM</strong></td>
+            <td>: 535250136</td>
+            <td><strong>Fakultas</strong></td>
+            <td>: Teknologi Informasi</td>
+          </tr>
+          <tr>
+            <td><strong>Nama Mahasiswa</strong></td>
+            <td>: DAVA ALDORA ARIE HERLAMBANG</td>
+            <td><strong>Program Studi</strong></td>
+            <td>: S1 Teknik Informatika</td>
+          </tr>
+          <tr>
+            <td><strong>Dosen PA</strong></td>
+            <td>: Dr. Ir. Ahmad, M.T.</td>
+            <td><strong>Tahun Akademik</strong></td>
+            <td>: 2026/2027 (Ganjil)</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Tabel Cetak -->
+      <table class="print-table">
+        <thead>
+          <tr>
+            <th width="40" class="text-center">No</th>
+            <th width="90">Kode MK</th>
+            <th>Mata Kuliah</th>
+            <th width="50" class="text-center">SKS</th>
+            <th width="70" class="text-center">Kelas</th>
+            <th>Jadwal & Ruang</th>
+            <th>Dosen Pengampu</th>
+          </tr>
+        </thead>
+        <tbody id="cetak-list">
+          <!-- Render via JS -->
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" class="text-right font-bold">Total SKS Diambil:</td>
+            <td class="text-center font-bold" id="total-sks-cetak">0</td>
+            <td colspan="3"></td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <!-- Area Tanda Tangan Resmi -->
+      <div class="signatures-wrapper">
+        <div class="sig-box">
+          <p>Jakarta, 29 September 2026</p>
+          <p class="sig-role">Mahasiswa,</p>
+          <div class="sig-space">
+            <span class="digital-stamp"><i class="fa-solid fa-check"></i> Terverifikasi Digital</span>
+          </div>
+          <p class="sig-name"><strong>DAVA ALDORA ARIE HERLAMBANG</strong></p>
+          <p class="sig-id">NIM. 535250136</p>
+        </div>
+        <div class="sig-box">
+          <p>Mengetahui,</p>
+          <p class="sig-role">Dosen Pembimbing Akademik,</p>
+          <div class="sig-space">
+            <span class="digital-stamp"><i class="fa-solid fa-check-double"></i> Disetujui System</span>
+          </div>
+          <p class="sig-name"><strong>Dr. Ir. Ahmad, M.T.</strong></p>
+          <p class="sig-id">NIP. 198204122008011003</p>
+        </div>
+      </div>
+
+      <!-- Tombol Aksi Cetak -->
+      <div class="print-actions no-print">
+        <button class="btn btn-primary btn-lg" onclick="window.print()">
+          <i class="fa-solid fa-print"></i> Cetak / Simpan PDF
+        </button>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- MODAL KONFIRMASI -->
+  <div id="confirm-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="icon-circle icon-circle-emerald">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h3>Konfirmasi Pengajuan KRS</h3>
+      </div>
+      <div class="modal-body">
+        <p>Apakah Anda yakin ingin mengajukan <strong><span id="modal-sks-count">0</span> SKS</strong> ini?</p>
+        <p class="text-sm text-slate">Setelah diajukan, daftar pilihan mata kuliah akan dikunci dan dikirimkan ke Dosen PA Anda.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeConfirmModal()">Batal</button>
+        <button class="btn btn-emerald" onclick="submitKRS()">Ya, Ajukan KRS</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS External -->
+  <script src="script.js"></script>
+</body>
+</html>
